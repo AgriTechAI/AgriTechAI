@@ -1,4 +1,5 @@
 "use client";
+import { FC, CSSProperties } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import Image from "next/image";
 
@@ -11,7 +12,13 @@ import "swiper/css/autoplay";
 // modules
 import { Pagination, Navigation, Autoplay } from "swiper/modules";
 
-const SwiperComponent = () => {
+const SwiperComponent: FC = () => {
+  const swiperStyles: CSSProperties = {
+    "--swiper-navigation-color": "#ffffff",
+    "--swiper-pagination-color": "#ffffff",
+    "--swiper-pagination-bottom": "0px",
+  } as CSSProperties & Record<string, string>;
+
   return (
     <Swiper
       spaceBetween={50}
@@ -23,11 +30,7 @@ const SwiperComponent = () => {
       loop={true}
       autoplay={{ delay: 3000, disableOnInteraction: false }}
       modules={[Pagination, Navigation, Autoplay]}
-      style={{
-        "--swiper-navigation-color": "#ffffff",
-        "--swiper-pagination-color": "#ffffff",
-        "--swiper-pagination-bottom": "0px",
-      }}
+      style={swiperStyles}
     >
       <SwiperSlide>
         <Image
@@ -35,6 +38,7 @@ const SwiperComponent = () => {
           width={300}
           height={200}
           layout="responsive"
+          alt="Image 1"
         />
       </SwiperSlide>
       <SwiperSlide>
@@ -43,6 +47,7 @@ const SwiperComponent = () => {
           width={300}
           height={200}
           layout="responsive"
+          alt="Image 2"
         />
       </SwiperSlide>
       <SwiperSlide>
@@ -51,6 +56,7 @@ const SwiperComponent = () => {
           width={300}
           height={200}
           layout="responsive"
+          alt="Image 3"
         />
       </SwiperSlide>
       <SwiperSlide>
@@ -59,6 +65,7 @@ const SwiperComponent = () => {
           width={300}
           height={200}
           layout="responsive"
+          alt="Image 4"
         />
       </SwiperSlide>
       <SwiperSlide>
@@ -67,6 +74,7 @@ const SwiperComponent = () => {
           width={300}
           height={200}
           layout="responsive"
+          alt="Image 5"
         />
       </SwiperSlide>
     </Swiper>
