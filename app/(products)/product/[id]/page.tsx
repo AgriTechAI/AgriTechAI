@@ -1,4 +1,6 @@
 import { fertilizerimgurl } from "@/const/caraousals";
+import styles from "@/ProductPage.module.css";
+import Image from "next/image";
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params; // Await the `params` promise to retrieve `id`
@@ -23,11 +25,6 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   };
 
   // Determine the class name based on `id`
-  const containerClass =
-    id === '1'
-      ? 'h-screen flex flex-col items-center justify-center bg-blue-500'
-      : 'h-screen flex flex-col items-center justify-center bg-red-500';
-
       return (
         <div className={styles.productPage}>
           {/* Product Image */}
