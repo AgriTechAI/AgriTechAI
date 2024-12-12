@@ -1,6 +1,7 @@
 import { fertilizerimgurl } from "@/const/caraousals";
 import styles from "./ProductPage.module.css";
 import Image from "next/image";
+import { Section } from "lucide-react";
 
 export default async function Page({
   params,
@@ -30,34 +31,36 @@ export default async function Page({
 
   // Determine the class name based on `id`
   return (
-    <div className="flex flex-col items-center justify-center">
-      <div className={styles.productPage}>
-        {/* Product Image */}
-        <div className={styles.productImage}>
-          <Image
-            src={"/img/hero.webp"}
-            alt={product.name}
-            width={500} // Adjust dimensions as needed
-            height={500}
-          />
-        </div>
+    <section className="relative h-full w-full pt-44 bg-green-100">
+      <div className="flex flex-col items-center justify-center">
+        <div className={styles.productPage}>
+          {/* Product Image */}
+          <div className={styles.productImage}>
+            <Image
+              src={"/img/hero.webp"}
+              alt={product.name}
+              width={500} // Adjust dimensions as needed
+              height={500}
+            />
+          </div>
 
-        {/* Product Details */}
-        <div className={styles.productDetails}>
-          <h1 className={styles.productName}>{product.name}</h1>
-          <h2 className={styles.productTitle}>{product.title}</h2>
-          <p className={styles.productPrice}>{product.price}</p>
-          <p className={styles.productDescription}>{product.description}</p>
+          {/* Product Details */}
+          <div className={styles.productDetails}>
+            <h1 className={styles.productName}>{product.name}</h1>
+            <h2 className={styles.productTitle}>{product.title}</h2>
+            <p className={styles.productPrice}>{product.price}</p>
+            <p className={styles.productDescription}>{product.description}</p>
 
-          <ul className={styles.productDetailsList}>
-            {product.details.map((detail, index) => (
-              <li key={index}>{detail}</li>
-            ))}
-          </ul>
+            <ul className={styles.productDetailsList}>
+              {product.details.map((detail, index) => (
+                <li key={index}>{detail}</li>
+              ))}
+            </ul>
 
-          <button className={styles.buyButton}>Add to Cart</button>
+            <button className={styles.buyButton}>Add to Cart</button>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
