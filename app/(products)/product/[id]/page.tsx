@@ -1,5 +1,5 @@
 import { fertilizerimgurl } from "@/const/caraousals";
-import styles from "ProductPage.module.css";
+import styles from "./ProductPage.module.css";
 import Image from "next/image";
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
