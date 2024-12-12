@@ -2,15 +2,16 @@
     display: flex;
     gap: 20px;
     padding: 20px;
+    color: black;
   }
 .productImage img {
-border-radius: 10px;
-max-width: 100%;
-height: auto;
+  border-radius: 10px;
+  max-width: 100%;
+  height: auto;
 }
 .productDetails {
-display: flex;
-flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
   
   .productName {
