@@ -30,7 +30,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           {/* Product Image */}
           <div className={styles.productImage}>
             <Image
-              src={product.image}
+              src={"/img/hero.webp"}
               alt={product.name}
               width={500} // Adjust dimensions as needed
               height={500}
