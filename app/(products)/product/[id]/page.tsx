@@ -1,7 +1,6 @@
 import { fertilizerimgurl } from "@/const/caraousals";
 import styles from "./ProductPage.module.css";
 import Image from "next/image";
-import { Section } from "lucide-react";
 
 export default async function Page({
   params,
