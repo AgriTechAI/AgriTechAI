@@ -1,7 +1,6 @@
-import { fertilizerimgurl } from "@/const/caraousals";
+import { CarousalData, fertilizers } from "@/const/caraousals";
 import styles from "./ProductPage.module.css";
 import Image from "next/image";
-
 export default async function Page({
   params,
 }: {
@@ -13,20 +12,7 @@ export default async function Page({
     return <div>Product not found</div>;
   }
 
-  const product = {
-    name: "Organic Fertilizer",
-    price: "$25.00",
-    title: "Premium Organic Fertilizer",
-    description:
-      "Boost your crop yield with our 100% organic fertilizer, rich in nutrients to support healthy soil and vibrant plants.",
-    image: { fertilizerimgurl }, // Place the image in the public folder
-    details: [
-      "100% organic ingredients",
-      "Improves soil health",
-      "Suitable for all crops",
-      "Net weight: 5kg",
-    ],
-  };
+  const product: CarousalData[] = fertilizers.filter((item) => item.id.toString() === id )
 
   // Determine the class name based on `id`
   return (
@@ -36,8 +22,8 @@ export default async function Page({
           {/* Product Image */}
           <div className={styles.productImage}>
             <Image
-              src={"/img/hero.webp"}
-              alt={product.name}
+              src={product[0].imageName}
+              alt={product[0].name}
               width={500} // Adjust dimensions as needed
               height={500}
             />
@@ -45,16 +31,10 @@ export default async function Page({
 
           {/* Product Details */}
           <div className={styles.productDetails}>
-            <h1 className={styles.productName}>{product.name}</h1>
-            <h2 className={styles.productTitle}>{product.title}</h2>
-            <p className={styles.productPrice}>{product.price}</p>
-            <p className={styles.productDescription}>{product.description}</p>
-
-            <ul className={styles.productDetailsList}>
-              {product.details.map((detail, index) => (
-                <li key={index}>{detail}</li>
-              ))}
-            </ul>
+            <h1 className={styles.productName}>{product[0].name}</h1>
+            <h2 className={styles.productTitle}>{product[0].name}</h2>
+            <p className={styles.productPrice}>{product[0].price_per_kg}</p>
+            <p className={styles.productDescription}>{product[0].description}</p>
 
             <button className={styles.buyButton}>Add to Cart</button>
           </div>
