@@ -96,9 +96,9 @@ async function seed() {
 async function get() {
   console.log("Database seeded");
   console.log(JSON.stringify(await getProductsByType("Fertilizer")));
-  console.log(JSON.stringify(await getProductsByType("Seed")));
-  console.log(JSON.stringify(await getProductsByType("AgriculturalMachine")));
-  console.log(JSON.stringify(await getProductById(4, "Fertilizer")));
+  console.log(JSON.stringify(await getProductsByType("Seeds")));
+  console.log(JSON.stringify(await getProductsByType("Agricultural Machines")));
+  console.log(JSON.stringify(await getProductById(4)));
 }
 
 get();

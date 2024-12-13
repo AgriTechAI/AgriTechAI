@@ -8,7 +8,7 @@ import {
 import { eq } from "drizzle-orm";
 
 export async function getProductsByType(
-  type: "Fertilizer" | "Seed" | "AgriculturalMachine"
+  type: "Fertilizer" | "Seeds" | "Agricultural Machines"
 ) {
   switch (type) {
     case "Fertilizer":
@@ -16,12 +16,12 @@ export async function getProductsByType(
         .select()
         .from(productsTable)
         .where(eq(productsTable.category, "Fertilizers"));
-    case "Seed":
+    case "Seeds":
       return await db
         .select()
         .from(productsTable)
         .where(eq(productsTable.category, "Seeds"));
-    case "AgriculturalMachine":
+    case "Agricultural Machines":
       return await db
         .select()
         .from(productsTable)
@@ -29,16 +29,13 @@ export async function getProductsByType(
   }
 }
 
-export async function getProductById(
-  id: number,
-  type: "Fertilizer" | "Seed" | "AgriculturalMachine"
-) {
+export async function getProductById(id: number) {
   const product = await db
     .select()
     .from(productsTable)
     .where(eq(productsTable.productId, id));
-  switch (type) {
-    case "Fertilizer":
+  switch (product[0].category) {
+    case "Fertilizers":
       return {
         ...product[0],
         ...(
@@ -48,14 +45,14 @@ export async function getProductById(
             .where(eq(fertilizersTable.productId, id))
         )[0],
       };
-    case "Seed":
+    case "Seeds":
       return {
         ...product[0],
         ...(
           await db.select().from(seedsTable).where(eq(seedsTable.productId, id))
         )[0],
       };
-    case "AgriculturalMachine":
+    case "Agricultural Machines":
       return {
         ...product[0],
         ...(
