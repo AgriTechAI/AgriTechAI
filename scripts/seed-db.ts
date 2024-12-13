@@ -1,6 +1,6 @@
 import { agriculturalMachines, fertilizers, seeds } from "@/const/caraousals";
 import { db } from "@/lib/db";
-import { getProductsByType } from "@/lib/db/helper";
+import { getProductById, getProductsByType } from "@/lib/db/helper";
 import {
   agriculturalMachinesTable,
   fertilizersTable,
@@ -98,6 +98,7 @@ async function get() {
   console.log(JSON.stringify(await getProductsByType("Fertilizer")));
   console.log(JSON.stringify(await getProductsByType("Seed")));
   console.log(JSON.stringify(await getProductsByType("AgriculturalMachine")));
+  console.log(JSON.stringify(await getProductById(4, "Fertilizer")));
 }
 
 get();

@@ -33,21 +33,31 @@ export async function getProductById(
   id: number,
   type: "Fertilizer" | "Seed" | "AgriculturalMachine"
 ) {
+  const product = await db
+    .select()
+    .from(productsTable)
+    .where(eq(productsTable.productId, id));
   switch (type) {
     case "Fertilizer":
-      return await db
-        .select()
-        .from(fertilizersTable)
-        .where(eq(fertilizersTable.productId, id));
+      return [
+        ...product,
+        await db
+          .select()
+          .from(fertilizersTable)
+          .where(eq(fertilizersTable.productId, id)),
+      ];
     case "Seed":
-      return await db
-        .select()
-        .from(seedsTable)
-        .where(eq(seedsTable.productId, id));
+      return [
+        ...product,
+        await db.select().from(seedsTable).where(eq(seedsTable.productId, id)),
+      ];
     case "AgriculturalMachine":
-      return await db
-        .select()
-        .from(agriculturalMachinesTable)
-        .where(eq(agriculturalMachinesTable.productId, id));
+      return [
+        ...product,
+        await db
+          .select()
+          .from(agriculturalMachinesTable)
+          .where(eq(agriculturalMachinesTable.productId, id)),
+      ];
   }
 }
