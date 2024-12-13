@@ -39,25 +39,31 @@ export async function getProductById(
     .where(eq(productsTable.productId, id));
   switch (type) {
     case "Fertilizer":
-      return [
-        ...product,
-        await db
-          .select()
-          .from(fertilizersTable)
-          .where(eq(fertilizersTable.productId, id)),
-      ];
+      return {
+        ...product[0],
+        ...(
+          await db
+            .select()
+            .from(fertilizersTable)
+            .where(eq(fertilizersTable.productId, id))
+        )[0],
+      };
     case "Seed":
-      return [
-        ...product,
-        await db.select().from(seedsTable).where(eq(seedsTable.productId, id)),
-      ];
+      return {
+        ...product[0],
+        ...(
+          await db.select().from(seedsTable).where(eq(seedsTable.productId, id))
+        )[0],
+      };
     case "AgriculturalMachine":
-      return [
-        ...product,
-        await db
-          .select()
-          .from(agriculturalMachinesTable)
-          .where(eq(agriculturalMachinesTable.productId, id)),
-      ];
+      return {
+        ...product[0],
+        ...(
+          await db
+            .select()
+            .from(agriculturalMachinesTable)
+            .where(eq(agriculturalMachinesTable.productId, id))
+        )[0],
+      };
   }
 }
