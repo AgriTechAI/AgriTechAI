@@ -36,7 +36,7 @@ export default function RootLayout({
       >
         <Providers>
           <Navbar />
-          <div className="bg-transparent fixed p-6 overflow-x-clip top-[4rem] w-full z-[5]">
+          <div className="bg-transparent fixed p-6 overflow-x-clip top-[4rem] w-full z-5">
             <Menu />
           </div>
           {children}
