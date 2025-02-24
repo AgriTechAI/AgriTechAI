@@ -1,4 +1,4 @@
-name: Lint
+name: Lint & Build
 
 on:
   push:
@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   run-linters:
-    name: Run linters
+    name: Run linters and check build
     runs-on: ubuntu-latest
 
     steps:
@@ -27,7 +27,12 @@ jobs:
           node-version: 20
 
       - name: Install Node.js dependencies
-        run: npm i
+        run: npm i --force
 
       - name: Run linters
         run: npm run lint
+
+      - name: Run build
+        run: npm run build
+
+        

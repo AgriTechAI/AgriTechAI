@@ -25,7 +25,7 @@ const HeroSection: React.FC = () => {
               </a>
               <a
                 href="#learn-more"
-                className="px-6 py-3 bg-background text-green-600 dark:text-green-200 border border-green-600 rounded-md hover:bg-green-50 hover:dark:bg-green-950 transition"
+                className="px-6 py-3 bg-background text-green-600 dark:text-green-200 border border-green-600 rounded-md hover:bg-green-50 dark:hover:bg-green-950 transition"
               >
                 Learn More
               </a>
@@ -47,7 +47,7 @@ const HeroSection: React.FC = () => {
           </div>
         </div>
       </div>
-      <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-green-200 dark:to-green-950 dark:from-green-700 opacity-30 pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-r from-green-400 to-green-200 dark:to-green-950 dark:from-green-700 opacity-30 pointer-events-none" />
     </section>
   );
 };

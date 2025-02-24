@@ -6,6 +6,7 @@ import { Menu } from "@/components/navbar/navigationMegaMenu";
 import Providers from "@/components/providers";
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
+import Footer from "@/components/footer/Footer";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -35,12 +36,13 @@ export default function RootLayout({
       >
         <Providers>
           <Navbar />
-          <div className="bg-transparent fixed p-6 overflow-x-clip top-[4rem] w-full z-[5]">
+          <div className="bg-transparent fixed p-6 overflow-x-clip top-[4rem] w-full z-5">
             <Menu />
           </div>
           {children}
           <Toaster />
         </Providers>
+        <Footer />
       </body>
     </html>
   );
