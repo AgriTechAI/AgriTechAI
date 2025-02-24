@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import SignIn from "./sign-in";
 import { useSession } from "next-auth/react";
 import SignOut from "./sign-out";
+import Cartbutton from "../cart/cartButton";
 export default function Navbar({ className }: { className?: string }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const session = useSession();
@@ -138,6 +139,7 @@ export default function Navbar({ className }: { className?: string }) {
           ) : null}
           {session.data ? <SignOut /> : <SignIn />}
           <ModeToggle />
+          <Cartbutton />
         </div>
       </nav>
       <Dialog

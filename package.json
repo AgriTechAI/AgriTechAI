@@ -33,7 +33,9 @@
     "react-wavify": "^1.11.1",
     "swiper": "^11.2.2",
     "tailwind-merge": "^3.0.2",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "use-sync-external-store": "^1.4.0",
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "^15.1.6",
