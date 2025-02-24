@@ -13,7 +13,7 @@ import {
   PopoverPanel,
 } from "@headlessui/react";
 import Image from "next/image";
-import { ChevronDownIcon, Link } from "lucide-react";
+import { ChevronDownIcon } from "lucide-react";
 import Search from "@/components/ui/search";
 import { products, callsToAction } from "@/const/navbar";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
