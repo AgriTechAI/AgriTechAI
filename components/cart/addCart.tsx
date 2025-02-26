@@ -11,7 +11,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({ product }) => {
   const addToCart = useCartStore((state) => state.addToCart);
 
   const handleAddToCart = () => {
-    addToCart(product);
+    addToCart({ ...product, quantity: 1 });
   };
 
   return (
