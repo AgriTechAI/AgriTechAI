@@ -136,3 +136,19 @@ export const wishlistTable = pgTable("wishlist", {
     .notNull(),
   addedDate: timestamp("added_date").defaultNow(),
 });
+
+export const carts = pgTable("carts", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+});
+
+export const cartItems = pgTable("cart_items", {
+  id: serial("id").primaryKey(),
+  cartId: integer("cart_id").notNull().references(() => carts.id, { onDelete: "cascade" }),
+  productId: integer("product_id").notNull().references(() => productsTable.productId, { onDelete: "cascade" }), 
+  quantity: integer("quantity").notNull().default(1),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+});
