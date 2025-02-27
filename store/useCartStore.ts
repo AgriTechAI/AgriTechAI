@@ -53,17 +53,18 @@
 //   )
 // );
 
-import { create } from "zustand";
+// useCartStore.ts
+"use client";
+import {create} from "zustand";
 import {
-  getUserCart,
-  addProductToCart,
-  updateProductQuantity,
-  removeProductFromCart,
-  clearCart,
-  getCartItems,
-} from "@/lib/db/helper";
+  fetchCartAction,
+  addToCartAction,
+  updateCartItemAction,
+  removeFromCartAction,
+  clearCartAction,
+} from "@/app/actions/cartActions";
 
-interface CartItem {
+export interface CartItem {
   productId: string;
   quantity: number;
   name?: string;
@@ -72,46 +73,72 @@ interface CartItem {
 
 interface CartState {
   cart: CartItem[];
-  fetchCart: (userId: string) => Promise<void>;
+  lastFetched: number;
+  fetchCart: (userId: string, force?: boolean) => Promise<void>;
   addToCart: (userId: string, productId: string, quantity: number) => Promise<void>;
   updateCartItem: (userId: string, productId: string, quantity: number) => Promise<void>;
   removeFromCart: (userId: string, productId: string) => Promise<void>;
   clearCart: (userId: string) => Promise<void>;
 }
 
-export const useCartStore = create<CartState>((set) => ({
+export const useCartStore = create<CartState>((set, get) => ({
   cart: [],
-
-  fetchCart: async (userId) => {
-    const cart = await getUserCart(userId);
-    if (cart) {
-      const items = await getCartItems(cart.id);
-      set({ cart: items.map(({ product, quantity }) => ({ productId: product.productId.toString(), quantity, price_per_kg: Number(product.price),name:product.name })) });
-    } else {
-      set({ cart: [] });
+  lastFetched: 0,
+  fetchCart: async (userId: string, force = false) => {
+    const now = Date.now();
+    const stale = now - get().lastFetched > 5 * 60 * 1000; // 5 minutes cache lifetime
+    // Only fetch if forced, if the data is stale, or if no cart is loaded yet.
+    if (force || stale || get().cart.length === 0) {
+      try {
+        const items = await fetchCartAction(userId);
+        set({
+          cart: items.map((item: any) => ({
+            productId: item.product.productId.toString(),
+            quantity: item.quantity,
+            name: item.product.name,
+            price_per_kg: Number(item.product.price),
+          })),
+          lastFetched: now,
+        });
+      } catch (error) {
+        console.error("Error fetching cart", error);
+      }
     }
   },
-
   addToCart: async (userId, productId, quantity) => {
-    await addProductToCart(userId, Number(productId), quantity);
-    await useCartStore.getState().fetchCart(userId); // Refresh cart from DB
+    try {
+      await addToCartAction(userId, Number(productId), quantity);
+      await get().fetchCart(userId, true); // force revalidation after mutation
+    } catch (error) {
+      console.error("Error adding to cart", error);
+    }
   },
-
   updateCartItem: async (userId, productId, quantity) => {
-    await updateProductQuantity(userId, Number(productId), quantity);
-    await useCartStore.getState().fetchCart(userId); // Refresh cart from DB
+    try {
+      await updateCartItemAction(userId, Number(productId), quantity);
+      await get().fetchCart(userId, true); // force revalidation
+    } catch (error) {
+      console.error("Error updating cart item", error);
+    }
   },
-
   removeFromCart: async (userId, productId) => {
-    await removeProductFromCart(userId, Number(productId));
-    await useCartStore.getState().fetchCart(userId); // Refresh cart from DB
+    try {
+      await removeFromCartAction(userId, Number(productId));
+      await get().fetchCart(userId, true); // force revalidation
+    } catch (error) {
+      console.error("Error removing from cart", error);
+    }
   },
-
   clearCart: async (userId) => {
-    await clearCart(userId);
-    set({ cart: [] });
+    try {
+      await clearCartAction(userId);
+      set({ cart: [], lastFetched: Date.now() });
+    } catch (error) {
+      console.error("Error clearing cart", error);
+    }
   },
 }));
+
 
 // async function getCartItems(cartId: number): Promise<CartItem[]> {
 //   const response = await fetch(`/api/cart/${cartId}/items`);
