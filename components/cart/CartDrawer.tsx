@@ -1,25 +1,24 @@
-// CartDrawer.tsx
 "use client";
 import { useCartStore } from "@/store/useCartStore";
 import Drawer from "../ui/Drawer";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function CartDrawer() {
   const { cart, fetchCart, removeFromCart, updateCartItem } = useCartStore();
   const userId = "123456789";
   const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (open) {
+      fetchCart(userId);
+    }
+  }, [open, fetchCart, userId]);
 
-  const totalAmount = cart.reduce(
-    (total, item) => total + item.quantity * (item.price_per_kg || 0),
-    0
-  );
+  const totalAmount = cart.reduce((total, item) => total + item.quantity * (item.price_per_kg || 0), 0);
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}>
-        🛒 Open Cart ({cart.length})
-      </Button>
+      <Button onClick={() => setOpen(true)}>🛒 Open Cart ({cart.length})</Button>
 
       <Drawer isOpen={open} onCartIconClick={() => setOpen(false)}>
         <div className="p-4 flex flex-col gap-4">
@@ -29,27 +28,16 @@ export default function CartDrawer() {
           ) : (
             <>
               {cart.map((item) => (
-                <div
-                  key={item.productId}
-                  className="flex justify-between items-center border-b p-2"
-                >
+                <div key={item.productId} className="flex justify-between items-center border-b p-2">
                   <div>
-                    <p className="font-semibold text-black">
-                      {item.name || "Product Name"}
-                    </p>
+                    <p className="font-semibold text-black">{item.name || "Product Name"}</p>
                     <p>Price: ₹{item.price_per_kg || 0}</p>
                     <p>Quantity: {item.quantity}</p>
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() =>
-                          updateCartItem(
-                            userId,
-                            item.productId,
-                            item.quantity - 1
-                          )
-                        }
+                        onClick={() => updateCartItem(userId, item.productId, item.quantity - 1)}
                         disabled={item.quantity <= 1}
                       >
                         -
@@ -57,13 +45,7 @@ export default function CartDrawer() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() =>
-                          updateCartItem(
-                            userId,
-                            item.productId,
-                            item.quantity + 1
-                          )
-                        }
+                        onClick={() => updateCartItem(userId, item.productId, item.quantity + 1)}
                       >
                         +
                       </Button>
@@ -83,10 +65,6 @@ export default function CartDrawer() {
               </div>
             </>
           )}
-          {/* Optional manual refresh button for revalidation */}
-          <Button variant="secondary" onClick={() => fetchCart(userId, true)}>
-            Refresh Cart
-          </Button>
         </div>
       </Drawer>
     </>

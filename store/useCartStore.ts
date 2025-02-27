@@ -55,6 +55,7 @@
 
 // useCartStore.ts
 "use client";
+
 import {create} from "zustand";
 import {
   fetchCartAction,
@@ -73,8 +74,7 @@ export interface CartItem {
 
 interface CartState {
   cart: CartItem[];
-  lastFetched: number;
-  fetchCart: (userId: string, force?: boolean) => Promise<void>;
+  fetchCart: (userId: string) => Promise<void>;
   addToCart: (userId: string, productId: string, quantity: number) => Promise<void>;
   updateCartItem: (userId: string, productId: string, quantity: number) => Promise<void>;
   removeFromCart: (userId: string, productId: string) => Promise<void>;
@@ -83,40 +83,34 @@ interface CartState {
 
 export const useCartStore = create<CartState>((set, get) => ({
   cart: [],
-  lastFetched: 0,
-  fetchCart: async (userId: string, force = false) => {
-    const now = Date.now();
-    const stale = now - get().lastFetched > 5 * 60 * 1000; // 5 minutes cache lifetime
-    // Only fetch if forced, if the data is stale, or if no cart is loaded yet.
-    if (force || stale || get().cart.length === 0) {
-      try {
-        const items = await fetchCartAction(userId);
-        set({
-          cart: items.map((item: any) => ({
-            productId: item.product.productId.toString(),
-            quantity: item.quantity,
-            name: item.product.name,
-            price_per_kg: Number(item.product.price),
-          })),
-          lastFetched: now,
-        });
-      } catch (error) {
-        console.error("Error fetching cart", error);
-      }
+  fetchCart: async (userId: string) => {
+    try {
+      const items = await fetchCartAction(userId);
+      set({
+        cart: items.map((item: any) => ({
+          productId: item.product.productId.toString(),
+          quantity: item.quantity,
+          name: item.product.name,
+          price_per_kg: Number(item.product.price),
+        })),
+      });
+    } catch (error) {
+      console.error("Error fetching cart", error);
+      set({ cart: [] });
     }
   },
   addToCart: async (userId, productId, quantity) => {
     try {
       await addToCartAction(userId, Number(productId), quantity);
-      await get().fetchCart(userId, true); // force revalidation after mutation
+      await get().fetchCart(userId); 
     } catch (error) {
-      console.error("Error adding to cart", error);
+      console.error("Error adding product to cart", error);
     }
   },
   updateCartItem: async (userId, productId, quantity) => {
     try {
       await updateCartItemAction(userId, Number(productId), quantity);
-      await get().fetchCart(userId, true); // force revalidation
+      await get().fetchCart(userId);
     } catch (error) {
       console.error("Error updating cart item", error);
     }
@@ -124,21 +118,20 @@ export const useCartStore = create<CartState>((set, get) => ({
   removeFromCart: async (userId, productId) => {
     try {
       await removeFromCartAction(userId, Number(productId));
-      await get().fetchCart(userId, true); // force revalidation
+      await get().fetchCart(userId);
     } catch (error) {
-      console.error("Error removing from cart", error);
+      console.error("Error removing product from cart", error);
     }
   },
   clearCart: async (userId) => {
     try {
       await clearCartAction(userId);
-      set({ cart: [], lastFetched: Date.now() });
+      set({ cart: [] });
     } catch (error) {
       console.error("Error clearing cart", error);
     }
   },
 }));
-
 
 // async function getCartItems(cartId: number): Promise<CartItem[]> {
 //   const response = await fetch(`/api/cart/${cartId}/items`);
