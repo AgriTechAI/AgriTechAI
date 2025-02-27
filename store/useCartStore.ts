@@ -63,7 +63,7 @@ import {
   updateCartItemAction,
   removeFromCartAction,
   clearCartAction,
-} from "@/app/actions/cartActions";
+} from "@/actions/cartActions";
 
 export interface CartItem {
   productId: string;
