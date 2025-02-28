@@ -54,9 +54,7 @@
 // );
 
 // useCartStore.ts
-"use client";
-
-import {create} from "zustand";
+import { create } from "zustand";
 import {
   fetchCartAction,
   addToCartAction,
@@ -101,26 +99,69 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
   addToCart: async (userId, productId, quantity) => {
     try {
+      // Optimistic update for immediate feedback
+      set(state => ({
+        cart: [
+          ...state.cart,
+          { productId, quantity, name: "", price_per_kg: 0 }, // Placeholder for fast UI update
+        ],
+      }));
+      
       await addToCartAction(userId, Number(productId), quantity);
+
+      // Re-fetch cart to get the latest data after adding to cart
       await get().fetchCart(userId); 
     } catch (error) {
       console.error("Error adding product to cart", error);
+      // Revert the optimistic update if there was an error
+      set(state => ({
+        cart: state.cart.filter(item => item.productId !== productId),
+      }));
     }
   },
   updateCartItem: async (userId, productId, quantity) => {
     try {
+      // Optimistic update for fast UI update
+      set(state => ({
+        cart: state.cart.map(item =>
+          item.productId === productId
+            ? { ...item, quantity }
+            : item
+        ),
+      }));
+
       await updateCartItemAction(userId, Number(productId), quantity);
-      await get().fetchCart(userId);
+      await get().fetchCart(userId); // Re-fetch cart to sync with backend
     } catch (error) {
       console.error("Error updating cart item", error);
+      // Revert optimistic update if there's an error
+      set(state => ({
+        cart: state.cart.map(item =>
+          item.productId === productId
+            ? { ...item, quantity: item.quantity } // revert to old quantity
+            : item
+        ),
+      }));
     }
   },
   removeFromCart: async (userId, productId) => {
     try {
+      // Optimistic update for fast UI feedback
+      set(state => ({
+        cart: state.cart.filter(item => item.productId !== productId),
+      }));
+
       await removeFromCartAction(userId, Number(productId));
-      await get().fetchCart(userId);
+      await get().fetchCart(userId); // Re-fetch cart to sync with the backend
     } catch (error) {
       console.error("Error removing product from cart", error);
+      // Revert optimistic update if there's an error
+      set(state => ({
+        cart: [
+          ...state.cart,
+          { productId, quantity: 1, name: "", price_per_kg: 0 }, // Re-add the removed item
+        ],
+      }));
     }
   },
   clearCart: async (userId) => {

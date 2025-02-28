@@ -6,13 +6,16 @@ import { useState, useEffect } from "react";
 
 export default function CartDrawer() {
   const { cart, fetchCart, removeFromCart, updateCartItem } = useCartStore();
-  const userId = "123456789";
+  const userId = "123456789"; // keep userId outside of useEffect
   const [open, setOpen] = useState(false);
+
+  // Fetch cart only if it's open and if cart is empty
   useEffect(() => {
-    if (open) {
+    if (open && cart.length === 0) {
+      // Only fetch the cart when it is empty and the drawer is open
       fetchCart(userId);
     }
-  }, [open, fetchCart, userId]);
+  }, [open, cart.length, fetchCart, userId]); // Ensure userId is in the dependency array
 
   const totalAmount = cart.reduce((total, item) => total + item.quantity * (item.price_per_kg || 0), 0);
 
@@ -38,7 +41,7 @@ export default function CartDrawer() {
                         variant="outline"
                         size="sm"
                         onClick={() => updateCartItem(userId, item.productId, item.quantity - 1)}
-                        disabled={item.quantity <= 1}
+                        disabled={item.quantity <= 1} // Disabled if quantity is <= 1
                       >
                         -
                       </Button>
