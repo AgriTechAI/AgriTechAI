@@ -55,13 +55,6 @@
 
 // useCartStore.ts
 import { create } from "zustand";
-import {
-  fetchCartAction,
-  addToCartAction,
-  updateCartItemAction,
-  removeFromCartAction,
-  clearCartAction,
-} from "@/actions/cartActions";
 
 export interface CartItem {
   productId: string;
@@ -82,8 +75,13 @@ interface CartState {
 export const useCartStore = create<CartState>((set, get) => ({
   cart: [],
   fetchCart: async (userId: string) => {
+    userId = "123456789";
     try {
-      const items = await fetchCartAction(userId);
+      const response = await fetch(`/api/cart?userId=${userId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch cart');
+      }
+      const items = await response.json();
       set({
         cart: items.map((item: any) => ({
           productId: item.product.productId.toString(),
@@ -99,29 +97,40 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
   addToCart: async (userId, productId, quantity) => {
     try {
-      // Optimistic update for immediate feedback
+      // Optimistic update
       set(state => ({
         cart: [
           ...state.cart,
-          { productId, quantity, name: "", price_per_kg: 0 }, // Placeholder for fast UI update
+          { productId, quantity, name: "", price_per_kg: 0 },
         ],
       }));
-      
-      await addToCartAction(userId, Number(productId), quantity);
 
-      // Re-fetch cart to get the latest data after adding to cart
-      await get().fetchCart(userId); 
+      const response = await fetch('/api/cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId, productId, quantity }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add to cart');
+      }
+
+      // Re-fetch cart to sync with backend
+      await get().fetchCart(userId);
     } catch (error) {
       console.error("Error adding product to cart", error);
-      // Revert the optimistic update if there was an error
+      // Revert optimistic update
       set(state => ({
         cart: state.cart.filter(item => item.productId !== productId),
       }));
     }
   },
   updateCartItem: async (userId, productId, quantity) => {
+    const previousCart = get().cart; // Store previous state for revert
     try {
-      // Optimistic update for fast UI update
+      // Optimistic update
       set(state => ({
         cart: state.cart.map(item =>
           item.productId === productId
@@ -130,50 +139,81 @@ export const useCartStore = create<CartState>((set, get) => ({
         ),
       }));
 
-      await updateCartItemAction(userId, Number(productId), quantity);
-      await get().fetchCart(userId); // Re-fetch cart to sync with backend
+      const response = await fetch('/api/cart', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId, productId, quantity }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update cart item');
+      }
+
+      // Re-fetch cart to sync with backend
+      await get().fetchCart(userId);
     } catch (error) {
       console.error("Error updating cart item", error);
-      // Revert optimistic update if there's an error
-      set(state => ({
-        cart: state.cart.map(item =>
-          item.productId === productId
-            ? { ...item, quantity: item.quantity } // revert to old quantity
-            : item
-        ),
-      }));
+      // Revert to previous state
+      set({ cart: previousCart });
     }
   },
   removeFromCart: async (userId, productId) => {
+    const itemToRemove = get().cart.find(item => item.productId === productId);
     try {
-      // Optimistic update for fast UI feedback
+      // Optimistic update
       set(state => ({
         cart: state.cart.filter(item => item.productId !== productId),
       }));
 
-      await removeFromCartAction(userId, Number(productId));
-      await get().fetchCart(userId); // Re-fetch cart to sync with the backend
+      const response = await fetch('/api/cart', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId, productId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to remove from cart');
+      }
+
+      // Re-fetch cart to sync with backend
+      await get().fetchCart(userId);
     } catch (error) {
       console.error("Error removing product from cart", error);
-      // Revert optimistic update if there's an error
-      set(state => ({
-        cart: [
-          ...state.cart,
-          { productId, quantity: 1, name: "", price_per_kg: 0 }, // Re-add the removed item
-        ],
-      }));
+      // Revert by adding back the item
+      if (itemToRemove) {
+        set(state => ({
+          cart: [...state.cart, itemToRemove],
+        }));
+      }
     }
   },
   clearCart: async (userId) => {
+    const previousCart = get().cart; // Store previous state for revert
     try {
-      await clearCartAction(userId);
+      const response = await fetch('/api/cart', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to clear cart');
+      }
+
       set({ cart: [] });
     } catch (error) {
       console.error("Error clearing cart", error);
+      // Revert to previous state or refetch
+      set({ cart: previousCart });
     }
   },
 }));
-
 // async function getCartItems(cartId: number): Promise<CartItem[]> {
 //   const response = await fetch(`/api/cart/${cartId}/items`);
 //   if (!response.ok) {
