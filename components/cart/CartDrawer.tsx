@@ -6,18 +6,17 @@ import { useState, useEffect } from "react";
 
 export default function CartDrawer() {
   const { cart, fetchCart, removeFromCart, updateCartItem } = useCartStore();
-  const userId = "123456789"; // keep userId outside of useEffect
+  const userId = "123456789";
   const [open, setOpen] = useState(false);
-
-  // Fetch cart only if it's open and if cart is empty
   useEffect(() => {
     if (open && cart.length === 0) {
-      // Only fetch the cart when it is empty and the drawer is open
       fetchCart(userId);
     }
   }, [open, cart.length, fetchCart, userId]); // Ensure userId is in the dependency array
 
-  const totalAmount = cart.reduce((total, item) => total + item.quantity * (item.price_per_kg || 0), 0);
+  const totalAmount = cart.reduce((total, item) => total + item.quantity * (item.price || 0), 0);
+
+
 
   return (
     <>
@@ -34,7 +33,7 @@ export default function CartDrawer() {
                 <div key={item.productId} className="flex justify-between items-center border-b p-2">
                   <div>
                     <p className="font-semibold text-black">{item.name || "Product Name"}</p>
-                    <p>Price: ₹{item.price_per_kg || 0}</p>
+                    <p>Price: ₹{item.price || 0}</p>
                     <p>Quantity: {item.quantity}</p>
                     <div className="flex gap-2">
                       <Button

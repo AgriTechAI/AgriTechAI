@@ -1,82 +1,152 @@
 import { NextResponse } from 'next/server';
-import {
-  getUserCart,
-  addProductToCart,
-  updateProductQuantity,
-  removeProductFromCart,
-  clearCart,
-  getCartItems,
-} from "@/lib/db/helper";
+import { db } from '@/lib/db';
+import { cartItems, carts, productsTable } from '@/lib/db/schema';
+import { InferModel, and, eq } from 'drizzle-orm';
 
 // GET /api/cart?userId=<userId>
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const userId = searchParams.get('userId');
+  const userId = searchParams.get("userId");
+
   if (!userId) {
-    return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
+    return NextResponse.json({ error: "Missing userId" }, { status: 400 });
   }
+
   try {
-    const cart = await getUserCart(userId);
-    if (cart) {
-      const items = await getCartItems(cart.id);
-      return NextResponse.json(items, { status: 200 });
+    // Fetch user's cart
+    const cart = await db
+      .select()
+      .from(carts)
+      .where(eq(carts.userId, userId))
+      .limit(1)
+      .then((result) => result[0]);
+
+    if (!cart) {
+      return NextResponse.json({ cartItems: [] }, { status: 200 });
     }
-    return NextResponse.json([], { status: 200 });
+
+    // Fetch cart items with product details
+    const items = await db
+      .select({
+        id: cartItems.id,
+        productId: cartItems.productId,
+        quantity: cartItems.quantity,
+        name: productsTable.name, 
+        price: productsTable.price, 
+        imageUrl: productsTable.imageUrl, 
+      })
+      .from(cartItems)
+      .leftJoin(productsTable, eq(cartItems.productId, productsTable.productId))
+      .where(eq(cartItems.cartId, cart.id));
+
+    return NextResponse.json({ cartItems: items }, { status: 200 });
   } catch (error) {
     console.error("Error fetching cart:", error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 
-// POST /api/cart
+// POST /api/cart - Add item to cart
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { userId, productId, quantity } = body;
+    const { userId, productId, quantity } = await request.json();
+
     if (!userId || !productId || !quantity) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
     }
-    await addProductToCart(userId, Number(productId), quantity);
-    return NextResponse.json({ message: 'Added to cart' }, { status: 200 });
+
+    let cart = await db
+      .select()
+      .from(carts)
+      .where(eq(carts.userId, userId))
+      .limit(1)
+      .then(result => result[0]);
+
+    if (!cart) {
+      const [newCart] = await db.insert(carts).values({ userId }).returning();
+      cart = newCart;
+    }
+
+    const existingItem = await db
+      .select()
+      .from(cartItems)
+      .where(and(eq(cartItems.cartId, cart.id), eq(cartItems.productId, Number(productId))))
+      .then(result => result[0]);
+
+    if (existingItem) {
+      await db.update(cartItems)
+        .set({ quantity: existingItem.quantity + Number(quantity) })
+        .where(eq(cartItems.id, existingItem.id));
+    } else {
+      await db.insert(cartItems).values({
+        cartId: cart.id as InferModel<typeof cartItems>['cartId'],
+        productId: Number(productId),
+        quantity: Number(quantity),
+      });
+    }
+
+    return NextResponse.json({ message: "Item added to cart" }, { status: 200 });
   } catch (error) {
-    console.error("Error adding to cart:", error);
+    console.error("Error adding item to cart:", error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
 
-// PUT /api/cart
+// PUT /api/cart - Update item quantity
 export async function PUT(request: Request) {
   try {
-    const body = await request.json();
-    const { userId, productId, quantity } = body;
-    if (!userId || !productId || !quantity) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    const { userId, productId, quantity } = await request.json();
+
+    if (!userId || !productId || quantity < 1) {
+      return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
     }
-    await updateProductQuantity(userId, Number(productId), quantity);
-    return NextResponse.json({ message: 'Cart item updated' }, { status: 200 });
+
+    const cart = await db
+      .select()
+      .from(carts)
+      .where(eq(carts.userId, userId))
+      .limit(1)
+      .then(result => result[0]);
+
+    if (!cart) {
+      return NextResponse.json({ error: "Cart not found" }, { status: 404 });
+    }
+
+    await db.update(cartItems)
+      .set({ quantity })
+      .where(and(eq(cartItems.cartId, cart.id), eq(cartItems.productId, productId)));
+
+    return NextResponse.json({ message: "Cart item updated" }, { status: 200 });
   } catch (error) {
     console.error("Error updating cart item:", error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
 
-// DELETE /api/cart
+// DELETE /api/cart - Remove item or clear cart
 export async function DELETE(request: Request) {
   try {
-    const body = await request.json();
-    const { userId, productId } = body;
-    if (!userId) {
-      return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
+    const { userId, productId } = await request.json();
+
+    const cart = await db
+      .select()
+      .from(carts)
+      .where(eq(carts.userId, userId))
+      .limit(1)
+      .then(result => result[0]);
+
+    if (!cart) {
+      return NextResponse.json({ error: "Cart not found" }, { status: 404 });
     }
+
     if (productId) {
-      // Remove specific product
-      await removeProductFromCart(userId, Number(productId));
-      return NextResponse.json({ message: 'Product removed from cart' }, { status: 200 });
+      await db.delete(cartItems)
+        .where(and(eq(cartItems.cartId, cart.id), eq(cartItems.productId, productId)));
     } else {
-      // Clear entire cart
-      await clearCart(userId);
-      return NextResponse.json({ message: 'Cart cleared' }, { status: 200 });
+      await db.delete(cartItems).where(eq(cartItems.cartId, cart.id)); // Clear all cart items
     }
+
+    return NextResponse.json({ message: "Cart updated" }, { status: 200 });
   } catch (error) {
     console.error("Error in delete operation:", error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
