@@ -10,8 +10,10 @@ interface AddToCartButtonProps {
 const AddToCartButton: React.FC<AddToCartButtonProps> = ({ product }) => {
   const addToCart = useCartStore((state) => state.addToCart);
 
+
   const handleAddToCart = () => {
-    addToCart({ ...product, quantity: 1 });
+    addToCart("123456789",product.id.toString(), 1);
+    console.log(product);
   };
 
   return (
