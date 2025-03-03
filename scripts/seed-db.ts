@@ -1,5 +1,5 @@
 import { agriculturalMachines, fertilizers, seeds } from "@/const/caraousals";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { getProductById, getProductsByType } from "@/lib/db/helper";
 import {
   agriculturalMachinesTable,
@@ -9,6 +9,7 @@ import {
 } from "@/lib/db/schema";
 
 async function seed() {
+  const db = await getDb();
   fertilizers.forEach(async (fertilizer) => {
     const productId = await db
       .insert(productsTable)

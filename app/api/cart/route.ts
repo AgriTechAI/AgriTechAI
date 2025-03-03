@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { cartItems, carts, productsTable } from '@/lib/db/schema';
-import { InferModel, and, eq } from 'drizzle-orm';
+import { NextResponse } from "next/server";
+import { getDb } from "@/lib/db";
+import { cartItems, carts, productsTable } from "@/lib/db/schema";
+import { InferModel, and, eq } from "drizzle-orm";
 
 // GET /api/cart?userId=<userId>
 export async function GET(request: Request) {
@@ -12,6 +12,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Missing userId" }, { status: 400 });
   }
 
+  const db = await getDb();
   try {
     // Fetch user's cart
     const cart = await db
@@ -31,9 +32,9 @@ export async function GET(request: Request) {
         id: cartItems.id,
         productId: cartItems.productId,
         quantity: cartItems.quantity,
-        name: productsTable.name, 
-        price: productsTable.price, 
-        imageUrl: productsTable.imageUrl, 
+        name: productsTable.name,
+        price: productsTable.price,
+        imageUrl: productsTable.imageUrl,
       })
       .from(cartItems)
       .leftJoin(productsTable, eq(cartItems.productId, productsTable.productId))
@@ -42,7 +43,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ cartItems: items }, { status: 200 });
   } catch (error) {
     console.error("Error fetching cart:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -52,15 +56,17 @@ export async function POST(request: Request) {
     const { userId, productId, quantity } = await request.json();
 
     if (!userId || !productId || !quantity) {
-      return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const db = await getDb();
 
     let cart = await db
       .select()
       .from(carts)
       .where(eq(carts.userId, userId))
       .limit(1)
-      .then(result => result[0]);
+      .then((result) => result[0]);
 
     if (!cart) {
       const [newCart] = await db.insert(carts).values({ userId }).returning();
@@ -70,25 +76,37 @@ export async function POST(request: Request) {
     const existingItem = await db
       .select()
       .from(cartItems)
-      .where(and(eq(cartItems.cartId, cart.id), eq(cartItems.productId, Number(productId))))
-      .then(result => result[0]);
+      .where(
+        and(
+          eq(cartItems.cartId, cart.id),
+          eq(cartItems.productId, Number(productId))
+        )
+      )
+      .then((result) => result[0]);
 
     if (existingItem) {
-      await db.update(cartItems)
+      await db
+        .update(cartItems)
         .set({ quantity: existingItem.quantity + Number(quantity) })
         .where(eq(cartItems.id, existingItem.id));
     } else {
       await db.insert(cartItems).values({
-        cartId: cart.id as InferModel<typeof cartItems>['cartId'],
+        cartId: cart.id as InferModel<typeof cartItems>["cartId"],
         productId: Number(productId),
         quantity: Number(quantity),
       });
     }
 
-    return NextResponse.json({ message: "Item added to cart" }, { status: 200 });
+    return NextResponse.json(
+      { message: "Item added to cart" },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Error adding item to cart:", error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -98,28 +116,36 @@ export async function PUT(request: Request) {
     const { userId, productId, quantity } = await request.json();
 
     if (!userId || !productId || quantity < 1) {
-      return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const db = await getDb();
 
     const cart = await db
       .select()
       .from(carts)
       .where(eq(carts.userId, userId))
       .limit(1)
-      .then(result => result[0]);
+      .then((result) => result[0]);
 
     if (!cart) {
       return NextResponse.json({ error: "Cart not found" }, { status: 404 });
     }
 
-    await db.update(cartItems)
+    await db
+      .update(cartItems)
       .set({ quantity })
-      .where(and(eq(cartItems.cartId, cart.id), eq(cartItems.productId, productId)));
+      .where(
+        and(eq(cartItems.cartId, cart.id), eq(cartItems.productId, productId))
+      );
 
     return NextResponse.json({ message: "Cart item updated" }, { status: 200 });
   } catch (error) {
     console.error("Error updating cart item:", error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -128,20 +154,25 @@ export async function DELETE(request: Request) {
   try {
     const { userId, productId } = await request.json();
 
+    const db = await getDb();
+
     const cart = await db
       .select()
       .from(carts)
       .where(eq(carts.userId, userId))
       .limit(1)
-      .then(result => result[0]);
+      .then((result) => result[0]);
 
     if (!cart) {
       return NextResponse.json({ error: "Cart not found" }, { status: 404 });
     }
 
     if (productId) {
-      await db.delete(cartItems)
-        .where(and(eq(cartItems.cartId, cart.id), eq(cartItems.productId, productId)));
+      await db
+        .delete(cartItems)
+        .where(
+          and(eq(cartItems.cartId, cart.id), eq(cartItems.productId, productId))
+        );
     } else {
       await db.delete(cartItems).where(eq(cartItems.cartId, cart.id)); // Clear all cart items
     }
@@ -149,6 +180,9 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ message: "Cart updated" }, { status: 200 });
   } catch (error) {
     console.error("Error in delete operation:", error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }

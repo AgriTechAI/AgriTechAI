@@ -1,4 +1,4 @@
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import {
   agriculturalMachinesTable,
   fertilizersTable,
@@ -12,6 +12,7 @@ import { eq, and } from "drizzle-orm";
 export async function getProductsByType(
   type: "Fertilizer" | "Seeds" | "Agricultural Machines"
 ) {
+  const db = await getDb();
   switch (type) {
     case "Fertilizer":
       return await db
@@ -32,6 +33,7 @@ export async function getProductsByType(
 }
 
 export async function getProductById(id: number) {
+  const db = await getDb();
   const product = await db
     .select()
     .from(productsTable)
@@ -68,7 +70,7 @@ export async function getProductById(id: number) {
 }
 export async function getUserCart(userId: string) {
   if (!userId) throw new Error("User ID is required");
-
+  const db = await getDb();
   const cart = await db
     .select()
     .from(carts)
@@ -81,6 +83,7 @@ export async function getUserCart(userId: string) {
 
 // Fetch Cart Items by Cart ID
 export async function getCartItems(cartId: number) {
+  const db = await getDb();
   return await db
     .select({
       id: cartItems.id,
@@ -108,6 +111,7 @@ export async function addProductToCart(userId: string, productId: number, quanti
   if (!userId || !productId) throw new Error("Invalid input");
 
   let cart = await getUserCart(userId);
+  const db = await getDb();
 
   if (!cart) {
     const [newCart] = await db.insert(carts).values({ userId }).returning();
@@ -141,6 +145,8 @@ export async function removeProductFromCart(userId: string, productId: number) {
   const cart = await getUserCart(userId);
   if (!cart) return;
 
+  const db = await getDb();
+
   await db.delete(cartItems)
     .where(and(eq(cartItems.cartId, cart.id), eq(cartItems.productId, productId)));
 
@@ -153,6 +159,8 @@ export async function updateProductQuantity(userId: string, productId: number, q
   const cart = await getUserCart(userId);
   if (!cart) return;
 
+  const db = await getDb();
+
   await db.update(cartItems)
     .set({ quantity })
     .where(and(eq(cartItems.cartId, cart.id), eq(cartItems.productId, productId)));
@@ -164,6 +172,8 @@ export async function clearCart(userId: string) {
   const cart = await getUserCart(userId);
   if (!cart) return;
 
+  const db = await getDb();
+
   await db.delete(cartItems).where(eq(cartItems.cartId, cart.id));
 
   return { message: "Cart cleared" };
@@ -173,12 +183,15 @@ export async function createOrder(userId: string) {
   const cart = await getUserCart(userId);
   if (!cart) return;
 
+  const db = await getDb();
+
   await db.delete(cartItems).where(eq(cartItems.cartId, cart.id));
 
   return { message: "Order placed and cart cleared" };
 }
 
 export async function getOrders(userId: string) {
+  const db = await getDb();
   return await db
     .select()
     .from(carts)
@@ -186,6 +199,7 @@ export async function getOrders(userId: string) {
 }
 
 export async function getOrderItems(cartId: number) {
+  const db = await getDb();
   return await db
     .select()
     .from(cartItems)

@@ -4,5 +4,13 @@ import { config } from "dotenv";
 
 config({ path: ".env" });
 
-const sql = neon(process.env.DATABASE_URL!);
-export const db = drizzle({ client: sql });
+
+let db: ReturnType<typeof drizzle> | null = null;
+
+export const getDb = async () => {
+  if (!db) {
+    const sql = neon(process.env.DATABASE_URL!);
+    db = drizzle({ client: sql });
+  }
+  return db;
+};
